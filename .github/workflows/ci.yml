@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  notebook-and-reports:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute notebook
+        run: |
+          mkdir -p reports
+          jupyter nbconvert --to notebook --execute notebooks/Analyze_AB_Test_Results.ipynb --output executed_notebook.ipynb --output-dir reports
+
+      - name: Export HTML and PDF
+        run: |
+          python scripts/export_notebook.py
+
+      - name: Upload notebook and reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-test-reports
+          path: |
+            reports/
+            presentation/AB_Test_Results.pptx
