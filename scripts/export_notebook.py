@@ -7,12 +7,14 @@ NOTEBOOK = ROOT / "notebooks" / "Analyze_AB_Test_Results.ipynb"
 REPORTS = ROOT / "reports"
 REPORTS.mkdir(parents=True, exist_ok=True)
 
-HTML_OUT = REPORTS / "Analyze_AB_Test_Results.html"
-PDF_OUT = REPORTS / "Analyze_AB_Test_Results.pdf"
+HTML_NAME = "Analyze_AB_Test_Results.html"
+PDF_NAME = "Analyze_AB_Test_Results.pdf"
+
 
 def run(cmd):
     print("Running:", " ".join(map(str, cmd)))
     subprocess.run(cmd, check=True)
+
 
 def main():
     if not NOTEBOOK.exists():
@@ -23,25 +25,23 @@ def main():
         "--to", "html",
         "--execute",
         str(NOTEBOOK),
-        "--output", HTML_OUT.name,
+        "--output", HTML_NAME,
         "--output-dir", str(REPORTS),
     ])
-
-    if not HTML_OUT.exists():
-        raise FileNotFoundError(f"HTML export not created: {HTML_OUT}")
 
     run([
         sys.executable, "-m", "jupyter", "nbconvert",
         "--to", "webpdf",
-        str(NOTEBOOK),
         "--execute",
         "--allow-chromium-download",
-        "--output", PDF_OUT.name,
+        str(NOTEBOOK),
+        "--output", PDF_NAME,
         "--output-dir", str(REPORTS),
     ])
 
-    print(f"Created: {HTML_OUT}")
-    print(f"Created: {PDF_OUT}")
+    print(f"Created: {REPORTS / HTML_NAME}")
+    print(f"Created: {REPORTS / PDF_NAME}")
+
 
 if __name__ == "__main__":
     main()
