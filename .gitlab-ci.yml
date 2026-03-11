@@ -1,0 +1,39 @@
+image: python:3.13-slim
+
+stages:
+  - validate
+  - export
+
+variables:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_CACHE_DIR: "1"
+  PYTHONUNBUFFERED: "1"
+
+cache:
+  paths:
+    - .cache/pip
+
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+
+validate_notebook:
+  stage: validate
+  script:
+    - mkdir -p reports
+    - jupyter nbconvert --to notebook --execute notebooks/Analyze_AB_Test_Results.ipynb --output Analyze_AB_Test_Results.executed.ipynb --output-dir reports
+  artifacts:
+    when: always
+    paths:
+      - reports/Analyze_AB_Test_Results.executed.ipynb
+
+export_reports:
+  stage: export
+  script:
+    - python scripts/export_notebook.py
+  artifacts:
+    when: always
+    paths:
+      - reports/Analyze_AB_Test_Results.html
+      - reports/Analyze_AB_Test_Results.pdf
