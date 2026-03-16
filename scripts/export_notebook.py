@@ -22,17 +22,28 @@ def run(cmd):
     subprocess.run(cmd, check=True)
 
 
+def remove_slide(prs: Presentation, slide_index: int) -> None:
+    slide_id_list = prs.slides._sldIdLst
+    slide_id_list.remove(slide_id_list[slide_index])
+
+
 def update_presentation():
-    if not TEMPLATE_PRESENTATION.exists():
-        raise FileNotFoundError(f"Presentation template not found: {TEMPLATE_PRESENTATION}")
+    source_presentation = TEMPLATE_PRESENTATION if TEMPLATE_PRESENTATION.exists() else PRESENTATION
+    if not source_presentation.exists():
+        raise FileNotFoundError(
+            f"Neither template nor project presentation was found: {TEMPLATE_PRESENTATION} / {PRESENTATION}"
+        )
     if not COUNTRY_IMAGE.exists():
         raise FileNotFoundError(f"Country distribution image not found: {COUNTRY_IMAGE}")
 
-    prs = Presentation(TEMPLATE_PRESENTATION)
+    prs = Presentation(source_presentation)
 
-    # Remove the instructional slide before submission.
-    slide_id_list = prs.slides._sldIdLst
-    slide_id_list.remove(slide_id_list[1])
+    if len(prs.slides) >= 2:
+        slide_text = "\n".join(
+            getattr(shape, "text", "").strip() for shape in prs.slides[1].shapes if hasattr(shape, "text")
+        )
+        if "How to Use This Template" in slide_text:
+            remove_slide(prs, 1)
 
     prs.slides[0].shapes[2].text = "Data Scientist: Francesco Malagrino"
 
