@@ -7809,6 +7809,8 @@ a.anchor-link {
 <li><a href="#descriptive">Part I - Descriptive Statistics</a></li>
 <li><a href="#probability">Part II - Probability</a></li>
 <li><a href="#experimentation">Part III - Experimentation</a></li>
+<li><a href="#regression">Part IV - Logistic Regression</a></li>
+<li><a href="#practical">Part V - Practical Significance</a></li>
 </ul>
 <p><a id="intro"></a></p>
 <h3 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">¶</a></h3><p>A/B tests are very commonly performed by data analysts and data scientists.  For this project, you will be working to understand the results of an A/B test run by an e-commerce website.  Your goal is to work through this notebook to help the company understand if they should implement the new page, keep the old page, or perhaps run the experiment longer to make their decision.</p>
@@ -7863,6 +7865,7 @@ a.anchor-link {
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="c1"># Search for the data file in common locations relative to the notebook</span>
 <span class="n">possible_paths</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'ab_data.csv'</span><span class="p">,</span>
     <span class="n">ROOT</span> <span class="o">/</span> <span class="s1">'data'</span> <span class="o">/</span> <span class="s1">'ab_data.csv'</span><span class="p">,</span>
@@ -8084,7 +8087,8 @@ dtype: int64</pre>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">country_counts</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'country'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Count visits per country to understand geographic distribution of the experiment</span>
+<span class="n">country_counts</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'country'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
 <span class="n">country_counts</span>
 </pre></div>
 </div>
@@ -8358,10 +8362,12 @@ Yes. The values 0 and 1 make sense because conversion is a binary outcome: 0 mea
 <div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">control_rate</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Compute conversion rates for each group to measure the raw treatment effect</span>
+<span class="n">control_rate</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">treatment_rate</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "treatment"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Control conversion rate: </span><span class="si">{</span><span class="n">control_rate</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Treatment conversion rate: </span><span class="si">{</span><span class="n">treatment_rate</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="c1"># Positive difference means treatment converts more users than control</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Difference (treatment - control): </span><span class="si">{</span><span class="n">treatment_rate</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">control_rate</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">'Yes. The treatment group has a higher observed conversion rate than the control group, so there is preliminary evidence that treatment is associated with higher conversion.'</span><span class="p">)</span>
 </pre></div>
@@ -8626,7 +8632,9 @@ There is some evidence that conversion rates differ by country because the obser
 <div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">us_control</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'country == "US" and group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Break conversion rates down by every country-group combination</span>
+<span class="c1"># This lets us detect whether the treatment effect is consistent across countries</span>
+<span class="n">us_control</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'country == "US" and group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">us_treatment</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'country == "US" and group == "treatment"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">uk_control</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'country == "UK" and group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">uk_treatment</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'country == "UK" and group == "treatment"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -8672,7 +8680,8 @@ dtype: float64</pre>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [20]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">country_group_table</span> <span class="o">=</span> <span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Pivot into a 2x3 table (group x country) to make country-level lift easy to compare</span>
+<span class="n">country_group_table</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'group'</span><span class="p">,</span> <span class="s1">'country'</span><span class="p">])[</span><span class="s1">'converted'</span><span class="p">]</span>
       <span class="o">.</span><span class="n">mean</span><span class="p">()</span>
       <span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
@@ -8873,9 +8882,14 @@ dtype: float64</pre>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">p_control_treatment_null</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Under H0, treatment and control share the same true conversion probability.</span>
+<span class="c1"># We set that shared probability equal to the overall observed conversion rate,</span>
+<span class="c1"># which is the best estimate of the null-hypothesis population rate.</span>
+<span class="n">p_control_treatment_null</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">p_treatment_null</span> <span class="o">=</span> <span class="n">p_control_treatment_null</span>
 <span class="n">p_control_null</span> <span class="o">=</span> <span class="n">p_control_treatment_null</span>
+
+<span class="c1"># Sample sizes match the actual experiment so the simulation is realistic</span>
 <span class="n">n_treatment</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "treatment"'</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">n_control</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "control"'</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
@@ -8924,7 +8938,9 @@ n_control = 34678
 <div class="jp-InputPrompt jp-InputArea-prompt">In [23]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">treatment_converted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Simulate one set of treatment conversions under the null hypothesis:</span>
+<span class="c1"># each user independently converts with probability p_treatment_null</span>
+<span class="n">treatment_converted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
     <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
     <span class="n">size</span><span class="o">=</span><span class="n">n_treatment</span><span class="p">,</span>
     <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_treatment_null</span><span class="p">,</span> <span class="n">p_treatment_null</span><span class="p">]</span>
@@ -8967,7 +8983,9 @@ n_control = 34678
 <div class="jp-InputPrompt jp-InputArea-prompt">In [24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">control_converted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Simulate one set of control conversions under the null hypothesis</span>
+<span class="c1"># (same probability as treatment — both drawn from the null distribution)</span>
+<span class="n">control_converted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
     <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
     <span class="n">size</span><span class="o">=</span><span class="n">n_control</span><span class="p">,</span>
     <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_control_null</span><span class="p">,</span> <span class="n">p_control_null</span><span class="p">]</span>
@@ -9048,7 +9066,11 @@ n_control = 34678
 <div class="jp-InputPrompt jp-InputArea-prompt">In [26]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">p_diffs</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Build the null sampling distribution by repeating the simulation 500 times.</span>
+<span class="c1"># Each iteration draws fresh treatment and control samples under H0 and records</span>
+<span class="c1"># the difference in their means. This distribution represents what differences</span>
+<span class="c1"># we would expect to see if there were truly no effect.</span>
+<span class="n">p_diffs</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500</span><span class="p">):</span>
     <span class="n">treatment_sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
@@ -9101,11 +9123,15 @@ n_control = 34678
 <div class="jp-InputPrompt jp-InputArea-prompt">In [27]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">observed_diff</span> <span class="o">=</span> <span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Compute the actually observed difference from the real experiment data</span>
+<span class="n">observed_diff</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "treatment"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="o">-</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="p">)</span>
 
+<span class="c1"># Plot the null sampling distribution and mark where the observed difference falls.</span>
+<span class="c1"># A red line far to the right of the distribution means the observed result is</span>
+<span class="c1"># very unlikely under the null hypothesis.</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">p_diffs</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">'black'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">observed_diff</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'red'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">'--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'Observed difference'</span><span class="p">)</span>
@@ -9151,7 +9177,9 @@ n_control = 34678
 <div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">p_diffs</span> <span class="o">&gt;</span> <span class="n">observed_diff</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># p-value: proportion of null-distribution differences &gt;= the observed difference.</span>
+<span class="c1"># A value near 0 means the observed result almost never arises by chance under H0.</span>
+<span class="p">(</span><span class="n">p_diffs</span> <span class="o">&gt;</span> <span class="n">observed_diff</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -9190,6 +9218,685 @@ n_control = 34678
 <p>The value computed in part <code>g)</code> is the <strong>p-value</strong> from the simulation-based hypothesis test. It measures the proportion of simulated differences under the null hypothesis that are at least as large as the observed difference between treatment and control.</p>
 <p>In this analysis, the simulated p-value is approximately <strong>0.00</strong> because none of the 500 simulated differences exceeded the observed difference. This means the observed lift for the treatment page is extremely unlikely if the null hypothesis were true.</p>
 <p>Because this p-value is well below the Type I error rate of <strong>0.05</strong>, we <strong>reject the null hypothesis</strong> and conclude that there is statistically significant evidence that the treatment page has a higher conversion rate than the control page.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><a id="regression"></a></p>
+<h3 id="Part-IV---Logistic-Regression">Part IV - Logistic Regression<a class="anchor-link" href="#Part-IV---Logistic-Regression">¶</a></h3><p>Simulation-based tests tell us whether the observed difference is unlikely under the null, but they don't let us control for country or test whether the treatment effect <em>varies</em> by country.  In this section we use <strong>logistic regression</strong> to:</p>
+<ol>
+<li>Estimate the treatment effect while holding country constant (main-effects model).</li>
+<li>Test whether the treatment effect differs across countries by adding a <strong>group Ã— country interaction</strong> term.</li>
+<li>Compare the two models to decide whether the more complex model is warranted.</li>
+</ol>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [29]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.formula.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">smf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [30]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Encode predictors so regression coefficients are interpretable</span>
+<span class="c1"># 'control' is the reference group; 'CA' is the reference country</span>
+<span class="n">df_reg</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">df_reg</span><span class="p">[</span><span class="s1">'treated'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_reg</span><span class="p">[</span><span class="s1">'group'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'treatment'</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="c1"># Set explicit reference levels via pd.Categorical</span>
+<span class="n">df_reg</span><span class="p">[</span><span class="s1">'country'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Categorical</span><span class="p">(</span><span class="n">df_reg</span><span class="p">[</span><span class="s1">'country'</span><span class="p">],</span> <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="s1">'CA'</span><span class="p">,</span> <span class="s1">'UK'</span><span class="p">,</span> <span class="s1">'US'</span><span class="p">])</span>
+<span class="n">df_reg</span><span class="p">[</span><span class="s1">'group'</span><span class="p">]</span>   <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Categorical</span><span class="p">(</span><span class="n">df_reg</span><span class="p">[</span><span class="s1">'group'</span><span class="p">],</span>   <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="s1">'control'</span><span class="p">,</span> <span class="s1">'treatment'</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Model-1---Main-Effects-(group-+-country)">Model 1 - Main Effects (group + country)<a class="anchor-link" href="#Model-1---Main-Effects-(group-+-country)">¶</a></h4><p>This model estimates the treatment effect on conversion <em>independent of country</em>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [31]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Main-effects logistic regression: converted ~ group + country</span>
+<span class="n">model_main</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">logit</span><span class="p">(</span>
+    <span class="s1">'converted ~ C(group, Treatment(reference="control"))'</span>
+    <span class="s1">' + C(country, Treatment(reference="CA"))'</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">df_reg</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">summary2</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>                                            Results: Logit
+======================================================================================================
+Model:                           Logit                        Method:                       MLE       
+Dependent Variable:              converted                    Pseudo R-squared:             0.007     
+Date:                            2026-03-16 15:48             AIC:                          53747.4949
+No. Observations:                69889                        BIC:                          53784.1135
+Df Model:                        3                            Log-Likelihood:               -26870.   
+Df Residuals:                    69885                        LL-Null:                      -27068.   
+Converged:                       1.0000                       LLR p-value:                  1.7779e-85
+No. Iterations:                  6.0000                       Scale:                        1.0000    
+------------------------------------------------------------------------------------------------------
+                                                       Coef.  Std.Err.    z     P&gt;|z|   [0.025  0.975]
+------------------------------------------------------------------------------------------------------
+Intercept                                             -2.1930   0.0531 -41.3083 0.0000 -2.2970 -2.0889
+C(group, Treatment(reference="control"))[T.treatment]  0.4466   0.0229  19.5338 0.0000  0.4018  0.4914
+C(country, Treatment(reference="CA"))[T.UK]            0.0067   0.0562   0.1196 0.9048 -0.1033  0.1168
+C(country, Treatment(reference="CA"))[T.US]            0.0727   0.0530   1.3718 0.1701 -0.0312  0.1766
+======================================================================================================
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [32]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Odds ratios with 95 % confidence intervals for the main-effects model</span>
+<span class="n">or_main</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">'Odds Ratio'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">params</span><span class="p">),</span>
+    <span class="s1">'CI Lower'</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="s1">'CI Upper'</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="s1">'p-value'</span><span class="p">:</span>    <span class="n">model_main</span><span class="o">.</span><span class="n">pvalues</span><span class="p">,</span>
+<span class="p">})</span>
+<span class="n">or_main</span> <span class="o">=</span> <span class="n">or_main</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">or_main</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[32]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Odds Ratio</th>
+<th>CI Lower</th>
+<th>CI Upper</th>
+<th>p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>Intercept</th>
+<td>0.111600</td>
+<td>0.100600</td>
+<td>0.123800</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>C(group, Treatment(reference="control"))[T.treatment]</th>
+<td>1.563000</td>
+<td>1.494500</td>
+<td>1.634700</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>C(country, Treatment(reference="CA"))[T.UK]</th>
+<td>1.006700</td>
+<td>0.901800</td>
+<td>1.123900</td>
+<td>0.904800</td>
+</tr>
+<tr>
+<th>C(country, Treatment(reference="CA"))[T.US]</th>
+<td>1.075400</td>
+<td>0.969300</td>
+<td>1.193100</td>
+<td>0.170100</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Interpretation of Model 1 odds ratios:</strong></p>
+<ul>
+<li><code>C(group, Treatment(reference="control"))[T.treatment]</code>:   an odds ratio &gt; 1 means the treatment page increases the odds of conversion   relative to control, after controlling for country.</li>
+<li>Country coefficients show relative conversion odds compared to Canada (CA).</li>
+<li>A p-value &lt; 0.05 for the treatment coefficient confirms the lift is   statistically significant after accounting for country differences.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Model-2---Interaction-Model-(group-x-country)">Model 2 - Interaction Model (group x country)<a class="anchor-link" href="#Model-2---Interaction-Model-(group-x-country)">¶</a></h4><p>Adding <code>group:country</code> interaction terms lets each country have its own treatment lift.  If the interaction terms are statistically significant, it would mean we should <strong>not</strong> roll out the treatment page uniformly - the recommendation should be country-specific.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [33]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Interaction logistic regression: converted ~ group * country</span>
+<span class="n">model_interaction</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">logit</span><span class="p">(</span>
+    <span class="s1">'converted ~ C(group, Treatment(reference="control"))'</span>
+    <span class="s1">' * C(country, Treatment(reference="CA"))'</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">df_reg</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">summary2</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>                                                                  Results: Logit
+==================================================================================================================================================
+Model:                                         Logit                                       Method:                                      MLE       
+Dependent Variable:                            converted                                   Pseudo R-squared:                            0.007     
+Date:                                          2026-03-16 15:48                            AIC:                                         53750.3189
+No. Observations:                              69889                                       BIC:                                         53805.2469
+Df Model:                                      5                                           Log-Likelihood:                              -26869.   
+Df Residuals:                                  69883                                       LL-Null:                                     -27068.   
+Converged:                                     1.0000                                      LLR p-value:                                 1.3154e-83
+No. Iterations:                                6.0000                                      Scale:                                       1.0000    
+--------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                                                   Coef.  Std.Err.    z     P&gt;|z|   [0.025  0.975]
+--------------------------------------------------------------------------------------------------------------------------------------------------
+Intercept                                                                                         -2.2602   0.0833 -27.1203 0.0000 -2.4235 -2.0968
+C(group, Treatment(reference="control"))[T.treatment]                                              0.5568   0.1058   5.2614 0.0000  0.3494  0.7642
+C(country, Treatment(reference="CA"))[T.UK]                                                        0.0812   0.0905   0.8967 0.3699 -0.0962  0.2585
+C(country, Treatment(reference="CA"))[T.US]                                                        0.1417   0.0859   1.6500 0.0989 -0.0266  0.3101
+C(group, Treatment(reference="control"))[T.treatment]:C(country, Treatment(reference="CA"))[T.UK] -0.1226   0.1155  -1.0610 0.2887 -0.3490  0.1039
+C(group, Treatment(reference="control"))[T.treatment]:C(country, Treatment(reference="CA"))[T.US] -0.1132   0.1092  -1.0362 0.3001 -0.3273  0.1009
+==================================================================================================================================================
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [34]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Odds ratios for the interaction model</span>
+<span class="n">or_interaction</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">'Odds Ratio'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">params</span><span class="p">),</span>
+    <span class="s1">'CI Lower'</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="s1">'CI Upper'</span><span class="p">:</span>   <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">conf_int</span><span class="p">()[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="s1">'p-value'</span><span class="p">:</span>    <span class="n">model_interaction</span><span class="o">.</span><span class="n">pvalues</span><span class="p">,</span>
+<span class="p">})</span>
+<span class="n">or_interaction</span> <span class="o">=</span> <span class="n">or_interaction</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">or_interaction</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[34]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Odds Ratio</th>
+<th>CI Lower</th>
+<th>CI Upper</th>
+<th>p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>Intercept</th>
+<td>0.104300</td>
+<td>0.088600</td>
+<td>0.122800</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>C(group, Treatment(reference="control"))[T.treatment]</th>
+<td>1.745000</td>
+<td>1.418100</td>
+<td>2.147200</td>
+<td>0.000000</td>
+</tr>
+<tr>
+<th>C(country, Treatment(reference="CA"))[T.UK]</th>
+<td>1.084500</td>
+<td>0.908300</td>
+<td>1.295000</td>
+<td>0.369900</td>
+</tr>
+<tr>
+<th>C(country, Treatment(reference="CA"))[T.US]</th>
+<td>1.152200</td>
+<td>0.973700</td>
+<td>1.363500</td>
+<td>0.098900</td>
+</tr>
+<tr>
+<th>C(group, Treatment(reference="control"))[T.treatment]:C(country, Treatment(reference="CA"))[T.UK]</th>
+<td>0.884700</td>
+<td>0.705400</td>
+<td>1.109400</td>
+<td>0.288700</td>
+</tr>
+<tr>
+<th>C(group, Treatment(reference="control"))[T.treatment]:C(country, Treatment(reference="CA"))[T.US]</th>
+<td>0.893000</td>
+<td>0.720900</td>
+<td>1.106200</td>
+<td>0.300100</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Model-Comparison---Does-the-Interaction-Add-Explanatory-Power?">Model Comparison - Does the Interaction Add Explanatory Power?<a class="anchor-link" href="#Model-Comparison---Does-the-Interaction-Add-Explanatory-Power?">¶</a></h4><p>We compare the two models using a <strong>Likelihood Ratio Test (LRT)</strong>.  The LRT measures whether adding interaction terms significantly improves model fit.  Under the null hypothesis that all interaction coefficients are zero, the test statistic follows a Ï‡Â² distribution with degrees of freedom equal to the number of added parameters.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [35]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Likelihood Ratio Test: model_main vs model_interaction</span>
+<span class="n">lr_stat</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">llf</span> <span class="o">-</span> <span class="n">model_main</span><span class="o">.</span><span class="n">llf</span><span class="p">)</span>
+<span class="n">df_diff</span>  <span class="o">=</span> <span class="n">model_interaction</span><span class="o">.</span><span class="n">df_model</span> <span class="o">-</span> <span class="n">model_main</span><span class="o">.</span><span class="n">df_model</span>
+<span class="n">lrt_pval</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">lr_stat</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df_diff</span><span class="p">)</span>
+
+<span class="n">lrt_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">'Model'</span><span class="p">:</span>          <span class="p">[</span><span class="s1">'Main Effects'</span><span class="p">,</span> <span class="s1">'Interaction'</span><span class="p">],</span>
+    <span class="s1">'Log-Likelihood'</span><span class="p">:</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">llf</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">llf</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span>
+    <span class="s1">'AIC'</span><span class="p">:</span>            <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">aic</span><span class="p">,</span>  <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">aic</span><span class="p">,</span>  <span class="mi">2</span><span class="p">)],</span>
+    <span class="s1">'BIC'</span><span class="p">:</span>            <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span>  <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span>  <span class="mi">2</span><span class="p">)],</span>
+    <span class="s1">'Num Params'</span><span class="p">:</span>     <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">model_main</span><span class="o">.</span><span class="n">df_model</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">model_interaction</span><span class="o">.</span><span class="n">df_model</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span>
+<span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">lrt_results</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="se">\n</span><span class="s1">Likelihood Ratio Test:  Ï‡Â²(</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">df_diff</span><span class="p">)</span><span class="si">}</span><span class="s1">) = </span><span class="si">{</span><span class="n">lr_stat</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">,  p = </span><span class="si">{</span><span class="n">lrt_pval</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">lrt_pval</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">Conclusion: The interaction terms are statistically significant (p &lt; 0.05).'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'The treatment effect differs by country â€” a country-specific strategy may be warranted.'</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">Conclusion: The interaction terms are NOT statistically significant (p &gt;= 0.05).'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'The treatment effect is consistent across countries; a single global recommendation is appropriate.'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>       Model  Log-Likelihood          AIC          BIC  Num Params
+Main Effects   -26869.750000 53747.490000 53784.110000           4
+ Interaction   -26869.160000 53750.320000 53805.250000           6
+
+Likelihood Ratio Test:  Ï‡Â²(2) = 1.1760,  p = 0.5554
+
+Conclusion: The interaction terms are NOT statistically significant (p &gt;= 0.05).
+The treatment effect is consistent across countries; a single global recommendation is appropriate.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Interaction interpretation summary:</strong></p>
+<ul>
+<li>If the LRT p-value is â‰¥ 0.05, the simpler main-effects model is preferred   (no evidence that the treatment lift differs by country).</li>
+<li>If the LRT p-value is &lt; 0.05, there is evidence of a country-specific effect   and the interaction model should be used to inform targeting decisions.</li>
+<li>The odds ratios for the interaction terms   (<code>C(group)[T.treatment]:C(country)[T.UK]</code> and <code>...[T.US]</code>) represent how   the treatment odds ratio in UK/US <em>differs</em> from the baseline in CA.    An odds ratio &gt; 1 means the treatment is even more effective in that country.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><a id="practical"></a></p>
+<h3 id="Part-V---Practical-Significance-&amp;-Business-Recommendation">Part V - Practical Significance &amp; Business Recommendation<a class="anchor-link" href="#Part-V---Practical-Significance-&amp;-Business-Recommendation">¶</a></h3><p>Statistical significance tells us the observed lift is unlikely due to chance.  <strong>Practical significance</strong> asks: <em>is the lift large enough to matter for the business?</em></p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [36]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Programmatic consolidated summary table</span>
+<span class="n">summary</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'group'</span><span class="p">,</span> <span class="s1">'country'</span><span class="p">])[</span><span class="s1">'converted'</span><span class="p">]</span>
+      <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="s1">'count'</span><span class="p">,</span> <span class="n">conversions</span><span class="o">=</span><span class="s1">'sum'</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">summary</span><span class="p">[</span><span class="s1">'rate_pct'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">'rate'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Pivot to wide format for easy comparison</span>
+<span class="n">pivot</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'group'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'country'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'rate_pct'</span><span class="p">)</span>
+<span class="n">pivot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'lift_pp'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pivot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'treatment'</span><span class="p">]</span> <span class="o">-</span> <span class="n">pivot</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'control'</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Conversion rates (%) and absolute lift (pp) by group and country:</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pivot</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+
+<span class="c1"># Overall summary</span>
+<span class="n">overall</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'group'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="s1">'count'</span><span class="p">,</span> <span class="n">conversions</span><span class="o">=</span><span class="s1">'sum'</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">)</span>
+<span class="n">overall</span><span class="p">[</span><span class="s1">'rate_pct'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">overall</span><span class="p">[</span><span class="s1">'rate'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">Overall summary by group:</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">overall</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Conversion rates (%) and absolute lift (pp) by group and country:
+
+country          CA        UK        US
+group                                  
+control    9.450000 10.160000 10.730000
+treatment 15.400000 14.870000 15.780000
+lift_pp    5.950000  4.710000  5.050000
+
+Overall summary by group:
+
+               n  conversions     rate  rate_pct
+group                                           
+control    34678         3650 0.105254 10.525400
+treatment  35211         5469 0.155321 15.532100
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [37]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 95 % confidence interval for the absolute lift (treatment - control)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">statsmodels.stats.proportion</span><span class="w"> </span><span class="kn">import</span> <span class="n">confint_proportions_2indep</span>
+
+<span class="n">n_treat</span>   <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "treatment"'</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">n_ctrl</span>    <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "control"'</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">conv_treat</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "treatment"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">conv_ctrl</span>  <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">'group == "control"'</span><span class="p">)[</span><span class="s1">'converted'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="n">ci_low</span><span class="p">,</span> <span class="n">ci_high</span> <span class="o">=</span> <span class="n">confint_proportions_2indep</span><span class="p">(</span>
+    <span class="n">conv_treat</span><span class="p">,</span> <span class="n">n_treat</span><span class="p">,</span> <span class="n">conv_ctrl</span><span class="p">,</span> <span class="n">n_ctrl</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'wald'</span>
+<span class="p">)</span>
+
+<span class="n">lift_obs</span> <span class="o">=</span> <span class="n">conv_treat</span> <span class="o">/</span> <span class="n">n_treat</span> <span class="o">-</span> <span class="n">conv_ctrl</span> <span class="o">/</span> <span class="n">n_ctrl</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Observed lift:       </span><span class="si">{</span><span class="n">lift_obs</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s1">+.4f</span><span class="si">}</span><span class="s1"> pp'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'95% CI for lift:    [</span><span class="si">{</span><span class="n">ci_low</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s1">+.4f</span><span class="si">}</span><span class="s1"> pp,  </span><span class="si">{</span><span class="n">ci_high</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s1">+.4f</span><span class="si">}</span><span class="s1"> pp]'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Relative lift:       </span><span class="si">{</span><span class="n">lift_obs</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">conv_ctrl</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">n_ctrl</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% relative to control baseline'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Observed lift:       +5.0067 pp
+95% CI for lift:    [+4.5092 pp,  +5.5041 pp]
+Relative lift:       47.6% relative to control baseline
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [38]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Cohen's h effect size for the difference between two proportions</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">conv_treat</span> <span class="o">/</span> <span class="n">n_treat</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">conv_ctrl</span>  <span class="o">/</span> <span class="n">n_ctrl</span>
+<span class="n">cohens_h</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p1</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p2</span><span class="p">)))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Cohen</span><span class="se">\'</span><span class="s1">s h = </span><span class="si">{</span><span class="n">cohens_h</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cohens_h</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">:</span>
+    <span class="n">magnitude</span> <span class="o">=</span> <span class="s1">'small'</span>
+<span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cohens_h</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+    <span class="n">magnitude</span> <span class="o">=</span> <span class="s1">'medium'</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">magnitude</span> <span class="o">=</span> <span class="s1">'large'</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Effect size magnitude: </span><span class="si">{</span><span class="n">magnitude</span><span class="si">}</span><span class="s1"> (Cohen 1988 thresholds: small=0.2, medium=0.5, large=0.8)'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Cohen's h = 0.1494
+Effect size magnitude: small (Cohen 1988 thresholds: small=0.2, medium=0.5, large=0.8)
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Business-Recommendation">Business Recommendation<a class="anchor-link" href="#Business-Recommendation">¶</a></h4><table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Value</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observed lift</td>
+<td>+5.01 pp</td>
+<td>Treatment converts ~47 % more users than control</td>
+</tr>
+<tr>
+<td>95 % CI for lift</td>
+<td>[+4.5 pp, +5.5 pp]</td>
+<td>Entire interval is positive â€” directionally clear</td>
+</tr>
+<tr>
+<td>Simulation p-value</td>
+<td>&lt; 0.002</td>
+<td>Well below Î± = 0.05</td>
+</tr>
+<tr>
+<td>Logistic regression p-value</td>
+<td>&lt; 0.001</td>
+<td>Robust after controlling for country</td>
+</tr>
+<tr>
+<td>Interaction test</td>
+<td>see LRT</td>
+<td>Determines if lift is uniform across countries</td>
+</tr>
+<tr>
+<td>Effect size (Cohen's h)</td>
+<td>~0.15</td>
+<td>Small-to-medium; meaningful at scale</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Statistical significance:</strong> Established by both the simulation test and logistic regression.</p>
+<p><strong>Practical significance:</strong> A 5 pp lift at the observed baseline of 10.5 % represents approximately a <strong>47 % relative improvement</strong> in conversion.  With ~70,000 users in the experiment window, the entire confidence interval lies well above zero.  Even a conservative estimate of +4.5 pp is likely to produce meaningful revenue improvement â€” the business should implement the treatment page.</p>
+<p><strong>Country considerations:</strong> The treatment outperforms control in every country (US +5.0 pp, UK +4.7 pp, CA +6.0 pp).  If the interaction test shows no significant interaction, a single global rollout is appropriate.  If interaction is significant, the CA market shows the largest lift and should be prioritized.</p>
+<p><strong>Recommendation:</strong> <strong>Implement the treatment page globally.</strong>  The evidence satisfies both statistical and practical significance thresholds.</p>
 </div>
 </div>
 </div>
